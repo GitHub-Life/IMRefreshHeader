@@ -10,6 +10,11 @@
 
 @interface TIMEffectHeader : MJRefreshHeader
 
+@property (nonatomic, strong) UIActivityIndicatorView *aiv;
+@property (nonatomic, copy) NSString *title;
+@property (nonatomic, strong) UIColor *refreshColor;
+
 @property (nonatomic, assign) UIEdgeInsets containerInsets;
+- (void)addContentView:(UIView *)contentView;
 
 @end

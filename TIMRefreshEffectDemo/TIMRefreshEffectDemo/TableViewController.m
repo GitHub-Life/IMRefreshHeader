@@ -10,6 +10,7 @@
 
 #import "TIMEffectHeader.h"
 
+static NSString *const HeaderIdentifier = @"HeaderIdentifier";
 static NSString *const CellIdentifier = @"CellIdentifier";
 
 @interface TableViewController ()
@@ -24,8 +25,12 @@ static NSString *const CellIdentifier = @"CellIdentifier";
 }
 
 - (void)initView {
+    [self.tableView registerClass:UITableViewHeaderFooterView.class forHeaderFooterViewReuseIdentifier:HeaderIdentifier];
     [self.tableView registerClass:UITableViewCell.class forCellReuseIdentifier:CellIdentifier];
+    [self.tableView setRowHeight:150];
+    [self.tableView setSectionHeaderHeight:40];
     TIMEffectHeader *header = [TIMEffectHeader headerWithRefreshingBlock:^{
+        NSLog(@" -  - ");
         __weak typeof(self) weakSelf = self;
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             [weakSelf.tableView.mj_header endRefreshing];
@@ -33,7 +38,14 @@ static NSString *const CellIdentifier = @"CellIdentifier";
     }];
     header.containerInsets = UIEdgeInsetsMake(10, 10, 10, 10);
     header.mj_h = 150;
+    header.title = @"下拉刷新看看哈";
+    header.refreshColor = UIColor.redColor;
     self.tableView.mj_header = header;
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    [self.tableView.mj_header beginRefreshing];
 }
 
 #pragma mark - UITableView DataSource
@@ -45,6 +57,17 @@ static NSString *const CellIdentifier = @"CellIdentifier";
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
     cell.textLabel.text = [NSString stringWithFormat:@" - %d, %d - ", (int)indexPath.section, (int)indexPath.row];
     return cell;
+}
+
+#pragma mark - UITableView Delegate
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
+    UITableViewHeaderFooterView *headerView = [tableView dequeueReusableHeaderFooterViewWithIdentifier:HeaderIdentifier];
+    headerView.textLabel.text = @"Section Header";
+    return headerView;
 }
 
 @end
