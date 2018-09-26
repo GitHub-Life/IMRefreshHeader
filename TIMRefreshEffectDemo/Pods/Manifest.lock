@@ -1,0 +1,27 @@
+PODS:
+  - Masonry (1.1.0)
+  - MJRefresh (3.1.15.3)
+  - ReactiveCocoa (2.5):
+    - ReactiveCocoa/UI (= 2.5)
+  - ReactiveCocoa/Core (2.5):
+    - ReactiveCocoa/no-arc
+  - ReactiveCocoa/no-arc (2.5)
+  - ReactiveCocoa/UI (2.5):
+    - ReactiveCocoa/Core
+  - Reveal-SDK (13)
+
+DEPENDENCIES:
+  - Masonry
+  - MJRefresh
+  - ReactiveCocoa (= 2.5)
+  - Reveal-SDK
+
+SPEC CHECKSUMS:
+  Masonry: 678fab65091a9290e40e2832a55e7ab731aad201
+  MJRefresh: b48380ae2b927b46c4ef000de9adb8dc748e1df7
+  ReactiveCocoa: e2db045570aa97c695e7aa97c2bcab222ae51f4a
+  Reveal-SDK: ccc2b0f8014965ea448b7534a7c2c8da232b75e8
+
+PODFILE CHECKSUM: 5b458b8bfab63e1b8ff4f2baeef7668abd8e0048
+
+COCOAPODS: 1.4.0
