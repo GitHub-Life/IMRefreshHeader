@@ -1,46 +1,37 @@
 //
-//  TIMEffectHeader.m
+//  IMInteractiveRefreshHeader.m
 //  TIMRefreshEffectDemo
 //
 //  Created by 万涛 on 2018/9/25.
 //  Copyright © 2018年 iMoon. All rights reserved.
 //
 
-#import "TIMEffectHeader.h"
+#import "IMInteractiveRefreshHeader.h"
+#import <AudioToolbox/AudioToolbox.h>
 #import <Masonry.h>
 
-typedef NS_ENUM(NSInteger, TIMContainerShowState) {
-    TIMContainerShowStateInvisible = 0,     // 不可见
-    TIMContainerShowStateTransitionVisible, // 过渡到可见
-    TIMContainerShowStateVisible,           // 可见
-    TIMContainerShowStateShowing,           // 显示中
-    TIMContainerShowStateTransitionHide,    // 过渡到隐藏
-    TIMContainerShowStateHide,              // 隐藏
-    TIMContainerShowStateHiding,            // 隐藏中
-};
+@interface IMInteractiveRefreshHeader ()
 
-@interface TIMEffectHeader ()
-
+@property (nonatomic, strong) UIActivityIndicatorView *aiv;
 @property (nonatomic, strong) UIView *refreshContainerView;
-@property (nonatomic, strong) UILabel *stateLabel;
 @property (nonatomic, strong) UIImageView *arrowImgView;
 @property (nonatomic, assign) CGFloat refreshThresholdPercent;
 
 @property (nonatomic, strong) UIView *containerView;
 @property (nonatomic, assign) CGFloat showViewThresholdPercent;
 
-@property (nonatomic, assign) TIMContainerShowState containerShowState;
+@property (nonatomic, assign) CGFloat showViewInsetTDelta;
 
 @end
 
-@implementation TIMEffectHeader
+@implementation IMInteractiveRefreshHeader
 
-static CGFloat const RefreshControlHeight = 50.f;
+static CGFloat const RefreshControlHeight = 54.f;
 
+#pragma mark - 懒加载
 - (UIActivityIndicatorView *)aiv {
     if (!_aiv) {
         _aiv = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
-        _aiv.color = UIColor.blackColor;
         _aiv.hidesWhenStopped = YES;
     }
     return _aiv;
@@ -56,7 +47,6 @@ static CGFloat const RefreshControlHeight = 50.f;
 - (UIView *)containerView {
     if (!_containerView) {
         _containerView = [[UIView alloc] init];
-        _containerView.backgroundColor = UIColor.blueColor;
     }
     return _containerView;
 }
@@ -64,7 +54,6 @@ static CGFloat const RefreshControlHeight = 50.f;
 #pragma mark - 准备工作(添加子视图等工作)
 - (void)prepare {
     [super prepare];
-    self.backgroundColor = UIColor.yellowColor;
     self.clipsToBounds = YES;
     
     __weak typeof(self) weakSelf = self;
@@ -111,14 +100,17 @@ static CGFloat const RefreshControlHeight = 50.f;
     }];
 }
 
-- (void)setTitle:(NSString *)title {
-    _title = title;
-    self.stateLabel.text = title;
+#pragma mark - 属性设置
+/** 设置状态标题 */
+- (void)setStatetTitle:(NSString *)statetTitle {
+    _statetTitle = statetTitle;
+    self.stateLabel.text = statetTitle;
     [self.stateLabel mas_updateConstraints:^(MASConstraintMaker *make) {
-        make.trailing.mas_equalTo(title.length ? 0 : 10);
+        make.trailing.mas_equalTo(statetTitle.length ? 0 : 10);
     }];
 }
 
+/** 设置刷新空间的颜色(箭头、状态标题、LoadingView的颜色) */
 - (void)setRefreshColor:(UIColor *)refreshColor {
     _refreshColor = refreshColor ?: UIColor.grayColor;
     self.aiv.color = refreshColor;
@@ -126,6 +118,7 @@ static CGFloat const RefreshControlHeight = 50.f;
     self.arrowImgView.tintColor = refreshColor;
 }
 
+/** 添加可交互的ContentView */
 - (void)addContentView:(UIView *)contentView {
     [self.containerView addSubview:contentView];
     [contentView mas_makeConstraints:^(MASConstraintMaker *make) {
@@ -133,6 +126,7 @@ static CGFloat const RefreshControlHeight = 50.f;
     }];
 }
 
+/** 设置RefreshHeader的高度 */
 - (void)setMj_h:(CGFloat)mj_h {
     if (mj_h < RefreshControlHeight) {
         mj_h = RefreshControlHeight;
@@ -142,11 +136,13 @@ static CGFloat const RefreshControlHeight = 50.f;
     self.refreshThresholdPercent = RefreshControlHeight / self.mj_h;
 }
 
+/** 设置可交互View的边距 */
 - (void)setContainerInsets:(UIEdgeInsets)containerInsets {
     _containerInsets = containerInsets;
     [self updateContainerViewLayoutConstraints];
 }
 
+/** 更新可交互View容器View的约束 */
 - (void)updateContainerViewLayoutConstraints {
     CGFloat containerHeight = self.mj_h - self.containerInsets.top - self.containerInsets.bottom;
     if (_containerView) {
@@ -163,28 +159,37 @@ static CGFloat const RefreshControlHeight = 50.f;
 
 #pragma mark 监听scrollView的contentOffset改变
 - (void)scrollViewContentOffsetDidChange:(NSDictionary *)change {
-    if (self.containerShowState >= TIMContainerShowStateShowing) {
-        // 跳转到下一个控制器时，contentInset可能会变
-        _scrollViewOriginalInset = self.scrollView.mj_inset;
+    if (self.interactiveShowState >= IMInteractiveShowStateShowing) {
         // 当前的contentOffset
         CGFloat offsetY = self.scrollView.mj_offsetY;
         // 头部控件刚好出现的offsetY
-        CGFloat happenOffsetY = - self.scrollViewOriginalInset.top;
+        CGFloat happenOffsetY = - _scrollViewOriginalInset.top;
         
         // 正常状态的offsetY
-        CGFloat normalOffsetY = happenOffsetY + self.mj_h;
+        CGFloat normalOffsetY = happenOffsetY - self.mj_h;
         if (self.scrollView.isDragging) { // 如果正在拖拽
-            if (offsetY <= happenOffsetY) {
-                self.containerShowState = TIMContainerShowStateShowing;
-            } else if (offsetY <= normalOffsetY) {
-                self.containerShowState = TIMContainerShowStateTransitionHide;
+            if (offsetY <= normalOffsetY) {
+                self.interactiveShowState = IMInteractiveShowStateShowing;
+            } else if (offsetY <= happenOffsetY) {
+                self.interactiveShowState = IMInteractiveShowStateTransitionHide;
                 [self.containerView mas_updateConstraints:^(MASConstraintMaker *make) {
-                    make.top.mas_equalTo((offsetY - happenOffsetY) * 2 + 10);
+                    make.top.mas_equalTo((offsetY - normalOffsetY) * 2 + 10);
                 }];
             } else {
-                self.containerShowState = TIMContainerShowStateHide;
+                self.interactiveShowState = IMInteractiveShowStateHide;
             }
         }
+        
+        if (self.interactiveShowState > IMInteractiveShowStateShowing) {
+            // 暂时保留
+            if (self.window == nil) return;
+            // sectionheader停留解决
+            CGFloat insetT = - self.scrollView.mj_offsetY > _scrollViewOriginalInset.top ? - self.scrollView.mj_offsetY : _scrollViewOriginalInset.top;
+            insetT = insetT > self.mj_h + _scrollViewOriginalInset.top ? self.mj_h + _scrollViewOriginalInset.top : insetT;
+            self.scrollView.mj_insetT = insetT;
+            self.showViewInsetTDelta = _scrollViewOriginalInset.top - insetT;
+        }
+        
         return;
     }
     
@@ -197,7 +202,6 @@ static CGFloat const RefreshControlHeight = 50.f;
         CGFloat insetT = - self.scrollView.mj_offsetY > _scrollViewOriginalInset.top ? - self.scrollView.mj_offsetY : _scrollViewOriginalInset.top;
         insetT = insetT > (self.mj_h * self.refreshThresholdPercent) + _scrollViewOriginalInset.top ? (self.mj_h * self.refreshThresholdPercent) + _scrollViewOriginalInset.top : insetT;
         self.scrollView.mj_insetT = insetT;
-        
 //        self.insetTDelta = _scrollViewOriginalInset.top - insetT; // 因为是MJRefreshHeader的私有属性，所以使用KVC方式赋值
         [self setValue:@(_scrollViewOriginalInset.top - insetT) forKey:@"insetTDelta"];
         return;
@@ -208,46 +212,28 @@ static CGFloat const RefreshControlHeight = 50.f;
     // 当前的contentOffset
     CGFloat offsetY = self.scrollView.mj_offsetY;
     // 头部控件刚好出现的offsetY
-    CGFloat happenOffsetY = - self.scrollViewOriginalInset.top;
+    CGFloat happenOffsetY = - _scrollViewOriginalInset.top;
     // 如果是向上滚动到看不见头部控件，直接返回
     // >= -> >
     if (offsetY > happenOffsetY) return;
     
-    
-    // 正常状态 到 即将刷新 的临界点
-    CGFloat normal2pullingOffsetY = happenOffsetY - self.mj_h * self.refreshThresholdPercent;
-    // 即将刷新 到 显示ContainerView 的临界点
-    CGFloat pulling2showViewOffsetY = happenOffsetY - (self.mj_h * self.showViewThresholdPercent);
     CGFloat pullingPercent = (happenOffsetY - offsetY) / self.mj_h;
-    
     if (self.scrollView.isDragging) { // 如果正在拖拽
         self.pullingPercent = pullingPercent;
-        if (self.state == MJRefreshStateIdle && offsetY <= normal2pullingOffsetY && offsetY > pulling2showViewOffsetY) {
+        if (self.state == MJRefreshStateIdle
+            && pullingPercent >= self.refreshThresholdPercent
+            && pullingPercent < self.showViewThresholdPercent) {
             // 转为即将刷新状态
             self.state = MJRefreshStatePulling;
-        } else if (self.state == MJRefreshStatePulling && (offsetY > normal2pullingOffsetY || offsetY <= pulling2showViewOffsetY)) {
+        } else if (self.state == MJRefreshStatePulling && (pullingPercent < self.refreshThresholdPercent || pullingPercent >= self.showViewThresholdPercent)) {
             // 转为普通状态
             self.state = MJRefreshStateIdle;
         }
     } else if (self.state == MJRefreshStatePulling) {// 即将刷新 && 手松开
         // 开始刷新
         [self beginRefreshing];
-    } else if (pullingPercent < self.refreshThresholdPercent) {
+    } else {
         self.pullingPercent = pullingPercent;
-    } else if (pullingPercent < self.showViewThresholdPercent) {
-        [self showContainerView];
-    }
-}
-
-#pragma mark - 滑动状态改变
-- (void)scrollViewPanStateDidChange:(NSDictionary *)change {
-    [super scrollViewPanStateDidChange:change];
-    if (change && change[@"new"]) {
-        if ([change[@"new"] integerValue] == UIGestureRecognizerStateEnded) {
-            if (self.containerShowState > TIMContainerShowStateShowing) {
-                [self hideContainerView];
-            }
-        }
     }
 }
 
@@ -257,18 +243,32 @@ static CGFloat const RefreshControlHeight = 50.f;
     __weak typeof(self) weakSelf = self;
     if (pullingPercent <= self.refreshThresholdPercent) {
         self.refreshContainerView.alpha = 1.f;
-        if (self.containerShowState < TIMContainerShowStateShowing) {
-            self.containerShowState = TIMContainerShowStateInvisible;
+        if (self.interactiveShowState < IMInteractiveShowStateShowing) {
+            self.interactiveShowState = IMInteractiveShowStateInvisible;
         }
-    } else if (pullingPercent <= 1.f) {
+    } else if (pullingPercent < 1.f) {
+        self.interactiveShowState = pullingPercent < self.showViewThresholdPercent ? IMInteractiveShowStateTransitionVisible : IMInteractiveShowStateCanVisible;
         CGFloat percent = (pullingPercent - self.refreshThresholdPercent) / (1.f - self.refreshThresholdPercent);
-        self.refreshContainerView.alpha = 1 - percent * 2;
-        self.containerShowState = TIMContainerShowStateTransitionVisible;
         [self.containerView mas_updateConstraints:^(MASConstraintMaker *make) {
             make.top.mas_equalTo((weakSelf.mj_h - weakSelf.containerInsets.top) * (1 - percent) + weakSelf.containerInsets.top);
         }];
+        self.refreshContainerView.alpha = 1 - (pullingPercent - self.refreshThresholdPercent) / (self.showViewThresholdPercent - self.refreshThresholdPercent);
     } else {
-        self.containerShowState = TIMContainerShowStateVisible;
+        self.interactiveShowState = IMInteractiveShowStateVisible;
+    }
+}
+
+#pragma mark - 滑动状态改变
+- (void)scrollViewPanStateDidChange:(NSDictionary *)change {
+    [super scrollViewPanStateDidChange:change];
+    if (change && change[@"new"]) {
+        if ([change[@"new"] integerValue] == UIGestureRecognizerStateEnded) {
+            if (self.interactiveShowState > IMInteractiveShowStateShowing) {
+                [self hideContainerView];
+            } else if (self.interactiveShowState > IMInteractiveShowStateTransitionVisible && self.interactiveShowState < IMInteractiveShowStateShowing) {
+                [self showContainerView];
+            }
+        }
     }
 }
 
@@ -284,11 +284,12 @@ static CGFloat const RefreshControlHeight = 50.f;
                     weakSelf.aiv.alpha = 0.f;
                 } completion:^(BOOL finished) {
                     // 如果执行完动画发现不是idle状态，就直接返回，进入其他状态
-                    if (self.state != MJRefreshStateIdle) return;
+                    if (weakSelf.state != MJRefreshStateIdle) return;
                     
                     weakSelf.aiv.alpha = 1.f;
                     [weakSelf.aiv stopAnimating];
                     weakSelf.arrowImgView.hidden = NO;
+                    weakSelf.arrowImgView.transform = CGAffineTransformIdentity;
                 }];
             } else {
                 [self.aiv stopAnimating];
@@ -346,27 +347,34 @@ static CGFloat const RefreshControlHeight = 50.f;
 }
 
 #pragma mark 监听ContainerView的显示状态
-- (void)setContainerShowState:(TIMContainerShowState)containerShowState {
-    if (_containerShowState == containerShowState) return;
-    _containerShowState = containerShowState;
+- (void)setInteractiveShowState:(IMInteractiveShowState)interactiveShowState {
+    if (_interactiveShowState == interactiveShowState) return;
+    _interactiveShowState = interactiveShowState;
     
     __weak typeof(self) weakSelf = self;
-    switch (_containerShowState) {
-        case TIMContainerShowStateInvisible:
-        case TIMContainerShowStateHide: {
+    switch (_interactiveShowState) {
+        case IMInteractiveShowStateInvisible:
+        case IMInteractiveShowStateHide: {
             [UIView animateWithDuration:MJRefreshFastAnimationDuration animations:^{
                 [weakSelf.containerView mas_updateConstraints:^(MASConstraintMaker *make) {
                     make.top.mas_equalTo(weakSelf.mj_h);
                 }];
             }];
         } break;
-        case TIMContainerShowStateVisible:
-        case TIMContainerShowStateShowing: {
+        case IMInteractiveShowStateVisible:
+        case IMInteractiveShowStateShowing: {
             [UIView animateWithDuration:MJRefreshFastAnimationDuration animations:^{
                 [weakSelf.containerView mas_updateConstraints:^(MASConstraintMaker *make) {
                     make.top.mas_equalTo(weakSelf.containerInsets.top);
                 }];
             }];
+        } break;
+        case IMInteractiveShowStateCanVisible: {
+            if (@available(iOS 10.0, *)) {
+                [[[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleMedium] impactOccurred];
+            } else {
+                AudioServicesPlaySystemSound(1519);
+            }
         } break;
         default:
             break;
@@ -375,11 +383,11 @@ static CGFloat const RefreshControlHeight = 50.f;
 
 #pragma mark - 显示ContainerView
 - (void)showContainerView {
-    self.containerShowState = TIMContainerShowStateShowing;
+    self.interactiveShowState = IMInteractiveShowStateShowing;
     __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
-        CGFloat top = weakSelf.scrollViewOriginalInset.top + weakSelf.mj_h;
         [UIView animateWithDuration:MJRefreshFastAnimationDuration animations:^{
+            CGFloat top = weakSelf.scrollViewOriginalInset.top + weakSelf.mj_h;
             // 增加滚动区域top
             weakSelf.scrollView.mj_insetT = top;
             CGPoint offset = weakSelf.scrollView.contentOffset;
@@ -390,30 +398,37 @@ static CGFloat const RefreshControlHeight = 50.f;
                 make.top.mas_equalTo(weakSelf.containerInsets.top);
             }];
             [weakSelf layoutIfNeeded];
+        } completion:^(BOOL finished) {
+            if (weakSelf.containerView.mj_y != weakSelf.containerInsets.top) {
+                [UIView animateWithDuration:MJRefreshFastAnimationDuration animations:^{
+                    [weakSelf.containerView mas_updateConstraints:^(MASConstraintMaker *make) {
+                        make.top.mas_equalTo(weakSelf.containerInsets.top);
+                    }];
+                    [weakSelf layoutIfNeeded];
+                }];
+            }
         }];
     });
 }
 
 #pragma mark - 隐藏ContainerView
 - (void)hideContainerView {
-    if (self.containerShowState != TIMContainerShowStateHiding) {
-        self.containerShowState = TIMContainerShowStateHiding;
+    if (self.interactiveShowState != IMInteractiveShowStateHiding) {
+        self.interactiveShowState = IMInteractiveShowStateHiding;
         __weak typeof(self) weakSelf = self;
         dispatch_async(dispatch_get_main_queue(), ^{
             [UIView animateWithDuration:MJRefreshSlowAnimationDuration animations:^{
-                CGFloat top = weakSelf.mj_h - weakSelf.scrollViewOriginalInset.top;
-                // 增加滚动区域top
-                weakSelf.scrollView.mj_insetT = -top;
+                weakSelf.scrollView.mj_insetT += self.showViewInsetTDelta;
                 // 设置滚动位置
                 CGPoint offset = weakSelf.scrollView.contentOffset;
-                offset.y = top;
+                offset.y = - weakSelf.scrollViewOriginalInset.top;
                 [weakSelf.scrollView setContentOffset:offset animated:NO];
                 [weakSelf.containerView mas_updateConstraints:^(MASConstraintMaker *make) {
                     make.top.mas_equalTo(weakSelf.mj_h);
                 }];
                 [weakSelf layoutIfNeeded];
             } completion:^(BOOL finished) {
-                weakSelf.containerShowState = TIMContainerShowStateInvisible;
+                weakSelf.interactiveShowState = IMInteractiveShowStateInvisible;
             }];
         });
     }

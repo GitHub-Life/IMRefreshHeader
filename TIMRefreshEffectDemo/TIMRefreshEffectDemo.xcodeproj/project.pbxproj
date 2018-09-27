@@ -14,7 +14,7 @@
 		B757626F215A144C002E7F4F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B757626D215A144C002E7F4F /* LaunchScreen.storyboard */; };
 		B7576272215A144C002E7F4F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = B7576271215A144C002E7F4F /* main.m */; };
 		B757627D215A165A002E7F4F /* TableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B757627C215A165A002E7F4F /* TableViewController.m */; };
-		B7576282215A1C02002E7F4F /* TIMEffectHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = B7576281215A1C02002E7F4F /* TIMEffectHeader.m */; };
+		B7CBC8F9215CA80F008761BD /* IMInteractiveRefreshHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = B7CBC8F8215CA80F008761BD /* IMInteractiveRefreshHeader.m */; };
 		EC0D224BEABF6FA6868AA84D /* libPods-TIMRefreshEffectDemo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F3C5128B8E784E76D6D8653 /* libPods-TIMRefreshEffectDemo.a */; };
 /* End PBXBuildFile section */
 
@@ -34,8 +34,8 @@
 		B7576271215A144C002E7F4F /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		B757627B215A165A002E7F4F /* TableViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TableViewController.h; sourceTree = "<group>"; };
 		B757627C215A165A002E7F4F /* TableViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TableViewController.m; sourceTree = "<group>"; };
-		B7576280215A1C02002E7F4F /* TIMEffectHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TIMEffectHeader.h; sourceTree = "<group>"; };
-		B7576281215A1C02002E7F4F /* TIMEffectHeader.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TIMEffectHeader.m; sourceTree = "<group>"; };
+		B7CBC8F7215CA80F008761BD /* IMInteractiveRefreshHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMInteractiveRefreshHeader.h; sourceTree = "<group>"; };
+		B7CBC8F8215CA80F008761BD /* IMInteractiveRefreshHeader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IMInteractiveRefreshHeader.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -96,8 +96,8 @@
 				B7576268215A1449002E7F4F /* Main.storyboard */,
 				B757627B215A165A002E7F4F /* TableViewController.h */,
 				B757627C215A165A002E7F4F /* TableViewController.m */,
-				B7576280215A1C02002E7F4F /* TIMEffectHeader.h */,
-				B7576281215A1C02002E7F4F /* TIMEffectHeader.m */,
+				B7CBC8F7215CA80F008761BD /* IMInteractiveRefreshHeader.h */,
+				B7CBC8F8215CA80F008761BD /* IMInteractiveRefreshHeader.m */,
 			);
 			path = TIMRefreshEffectDemo;
 			sourceTree = "<group>";
@@ -268,9 +268,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				B7576267215A1449002E7F4F /* ViewController.m in Sources */,
-				B7576282215A1C02002E7F4F /* TIMEffectHeader.m in Sources */,
 				B7576272215A144C002E7F4F /* main.m in Sources */,
 				B7576264215A1449002E7F4F /* AppDelegate.m in Sources */,
+				B7CBC8F9215CA80F008761BD /* IMInteractiveRefreshHeader.m in Sources */,
 				B757627D215A165A002E7F4F /* TableViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

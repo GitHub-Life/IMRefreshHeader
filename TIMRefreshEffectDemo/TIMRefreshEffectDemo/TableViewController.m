@@ -8,7 +8,7 @@
 
 #import "TableViewController.h"
 
-#import "TIMEffectHeader.h"
+#import "IMInteractiveRefreshHeader.h"
 
 static NSString *const HeaderIdentifier = @"HeaderIdentifier";
 static NSString *const CellIdentifier = @"CellIdentifier";
@@ -29,23 +29,24 @@ static NSString *const CellIdentifier = @"CellIdentifier";
     [self.tableView registerClass:UITableViewCell.class forCellReuseIdentifier:CellIdentifier];
     [self.tableView setRowHeight:150];
     [self.tableView setSectionHeaderHeight:40];
-    TIMEffectHeader *header = [TIMEffectHeader headerWithRefreshingBlock:^{
+    IMInteractiveRefreshHeader *header = [IMInteractiveRefreshHeader headerWithRefreshingBlock:^{
         NSLog(@" -  - ");
-        __weak typeof(self) weakSelf = self;
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            [weakSelf.tableView.mj_header endRefreshing];
-        });
     }];
     header.containerInsets = UIEdgeInsetsMake(10, 10, 10, 10);
-    header.mj_h = 150;
-    header.title = @"下拉刷新看看哈";
+    header.mj_h = 100;
+    header.statetTitle = @"下拉刷新看看哈";
     header.refreshColor = UIColor.redColor;
+    header.backgroundColor = UIColor.yellowColor;
+    UIView *contentView = [[UIView alloc] init];
+    contentView.backgroundColor = UIColor.blueColor;
+    [header addContentView:contentView];
     self.tableView.mj_header = header;
 }
 
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
-    [self.tableView.mj_header beginRefreshing];
+    
+    NSLog(@" - tableView.mj_inset = %@", NSStringFromUIEdgeInsets(self.tableView.mj_inset));
 }
 
 #pragma mark - UITableView DataSource
@@ -62,6 +63,11 @@ static NSString *const CellIdentifier = @"CellIdentifier";
 #pragma mark - UITableView Delegate
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    if (self.tableView.mj_header.isRefreshing) {
+        [self.tableView.mj_header endRefreshing];
+    } else {
+        [self.tableView.mj_header beginRefreshing];
+    }
 }
 
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
