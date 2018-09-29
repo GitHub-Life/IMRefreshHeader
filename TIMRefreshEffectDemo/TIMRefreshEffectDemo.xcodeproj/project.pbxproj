@@ -14,6 +14,10 @@
 		B757626F215A144C002E7F4F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B757626D215A144C002E7F4F /* LaunchScreen.storyboard */; };
 		B7576272215A144C002E7F4F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = B7576271215A144C002E7F4F /* main.m */; };
 		B757627D215A165A002E7F4F /* TableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B757627C215A165A002E7F4F /* TableViewController.m */; };
+		B7B8E5F7215DC83300BDDB8D /* MJRefreshXXBehindHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = B7B8E5F5215DC83300BDDB8D /* MJRefreshXXBehindHeader.m */; };
+		B7B8E5FA215DCD7500BDDB8D /* MJRefreshInteractiveHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = B7B8E5F9215DCD7500BDDB8D /* MJRefreshInteractiveHeader.m */; };
+		B7B8E5FD215DD58700BDDB8D /* TestView.m in Sources */ = {isa = PBXBuildFile; fileRef = B7B8E5FC215DD58700BDDB8D /* TestView.m */; };
+		B7B8E5FF215DD59500BDDB8D /* TestView.xib in Resources */ = {isa = PBXBuildFile; fileRef = B7B8E5FE215DD59500BDDB8D /* TestView.xib */; };
 		B7CBC8F9215CA80F008761BD /* IMInteractiveRefreshHeader.m in Sources */ = {isa = PBXBuildFile; fileRef = B7CBC8F8215CA80F008761BD /* IMInteractiveRefreshHeader.m */; };
 		EC0D224BEABF6FA6868AA84D /* libPods-TIMRefreshEffectDemo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F3C5128B8E784E76D6D8653 /* libPods-TIMRefreshEffectDemo.a */; };
 /* End PBXBuildFile section */
@@ -34,6 +38,13 @@
 		B7576271215A144C002E7F4F /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		B757627B215A165A002E7F4F /* TableViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TableViewController.h; sourceTree = "<group>"; };
 		B757627C215A165A002E7F4F /* TableViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TableViewController.m; sourceTree = "<group>"; };
+		B7B8E5F5215DC83300BDDB8D /* MJRefreshXXBehindHeader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MJRefreshXXBehindHeader.m; sourceTree = "<group>"; };
+		B7B8E5F6215DC83300BDDB8D /* MJRefreshXXBehindHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MJRefreshXXBehindHeader.h; sourceTree = "<group>"; };
+		B7B8E5F8215DCD7500BDDB8D /* MJRefreshInteractiveHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MJRefreshInteractiveHeader.h; sourceTree = "<group>"; };
+		B7B8E5F9215DCD7500BDDB8D /* MJRefreshInteractiveHeader.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MJRefreshInteractiveHeader.m; sourceTree = "<group>"; };
+		B7B8E5FB215DD58700BDDB8D /* TestView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestView.h; sourceTree = "<group>"; };
+		B7B8E5FC215DD58700BDDB8D /* TestView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestView.m; sourceTree = "<group>"; };
+		B7B8E5FE215DD59500BDDB8D /* TestView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = TestView.xib; sourceTree = "<group>"; };
 		B7CBC8F7215CA80F008761BD /* IMInteractiveRefreshHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMInteractiveRefreshHeader.h; sourceTree = "<group>"; };
 		B7CBC8F8215CA80F008761BD /* IMInteractiveRefreshHeader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IMInteractiveRefreshHeader.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -98,6 +109,13 @@
 				B757627C215A165A002E7F4F /* TableViewController.m */,
 				B7CBC8F7215CA80F008761BD /* IMInteractiveRefreshHeader.h */,
 				B7CBC8F8215CA80F008761BD /* IMInteractiveRefreshHeader.m */,
+				B7B8E5F8215DCD7500BDDB8D /* MJRefreshInteractiveHeader.h */,
+				B7B8E5F9215DCD7500BDDB8D /* MJRefreshInteractiveHeader.m */,
+				B7B8E5F6215DC83300BDDB8D /* MJRefreshXXBehindHeader.h */,
+				B7B8E5F5215DC83300BDDB8D /* MJRefreshXXBehindHeader.m */,
+				B7B8E5FB215DD58700BDDB8D /* TestView.h */,
+				B7B8E5FC215DD58700BDDB8D /* TestView.m */,
+				B7B8E5FE215DD59500BDDB8D /* TestView.xib */,
 			);
 			path = TIMRefreshEffectDemo;
 			sourceTree = "<group>";
@@ -197,6 +215,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B7B8E5FF215DD59500BDDB8D /* TestView.xib in Resources */,
 				B757626F215A144C002E7F4F /* LaunchScreen.storyboard in Resources */,
 				B757626C215A144C002E7F4F /* Assets.xcassets in Resources */,
 				B757626A215A1449002E7F4F /* Main.storyboard in Resources */,
@@ -267,9 +286,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B7B8E5FD215DD58700BDDB8D /* TestView.m in Sources */,
 				B7576267215A1449002E7F4F /* ViewController.m in Sources */,
+				B7B8E5F7215DC83300BDDB8D /* MJRefreshXXBehindHeader.m in Sources */,
 				B7576272215A144C002E7F4F /* main.m in Sources */,
 				B7576264215A1449002E7F4F /* AppDelegate.m in Sources */,
+				B7B8E5FA215DCD7500BDDB8D /* MJRefreshInteractiveHeader.m in Sources */,
 				B7CBC8F9215CA80F008761BD /* IMInteractiveRefreshHeader.m in Sources */,
 				B757627D215A165A002E7F4F /* TableViewController.m in Sources */,
 			);

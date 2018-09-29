@@ -9,6 +9,9 @@
 #import "TableViewController.h"
 
 #import "IMInteractiveRefreshHeader.h"
+#import "MJRefreshXXBehindHeader.h"
+#import "MJRefreshInteractiveHeader.h"
+#import "TestView.h"
 
 static NSString *const HeaderIdentifier = @"HeaderIdentifier";
 static NSString *const CellIdentifier = @"CellIdentifier";
@@ -29,29 +32,57 @@ static NSString *const CellIdentifier = @"CellIdentifier";
     [self.tableView registerClass:UITableViewCell.class forCellReuseIdentifier:CellIdentifier];
     [self.tableView setRowHeight:150];
     [self.tableView setSectionHeaderHeight:40];
-    IMInteractiveRefreshHeader *header = [IMInteractiveRefreshHeader headerWithRefreshingBlock:^{
-        NSLog(@" -  - ");
-    }];
-    header.containerInsets = UIEdgeInsetsMake(10, 10, 10, 10);
-    header.mj_h = 100;
-    header.statetTitle = @"下拉刷新看看哈";
-    header.refreshColor = UIColor.redColor;
-    header.backgroundColor = UIColor.yellowColor;
-    UIView *contentView = [[UIView alloc] init];
-    contentView.backgroundColor = UIColor.blueColor;
-    [header addContentView:contentView];
-    self.tableView.mj_header = header;
+    [self setRefreshHeader];
 }
 
-- (void)viewDidAppear:(BOOL)animated {
-    [super viewDidAppear:animated];
-    
-    NSLog(@" - tableView.mj_inset = %@", NSStringFromUIEdgeInsets(self.tableView.mj_inset));
+- (void)setRefreshHeader {
+    BOOL ASK = NO;
+    if (ASK) {
+        IMInteractiveRefreshHeader *header = [IMInteractiveRefreshHeader headerWithRefreshingBlock:^{
+            NSLog(@" - Refreshing - ");
+        }];
+        self.tableView.mj_header = header;
+        header.containerInsets = UIEdgeInsetsMake(10, 10, 10, 10);
+        header.mj_h = 100;
+        header.statetTitle = @"下拉刷新看看哈";
+        header.refreshColor = UIColor.redColor;
+        header.backgroundColor = UIColor.yellowColor;
+        UIView *contentView = [[UIView alloc] init];
+        contentView.backgroundColor = UIColor.blueColor;
+        [header addContentView:contentView];
+    } else {
+        MJRefreshInteractiveHeader *header = [MJRefreshInteractiveHeader headerWithRefreshingBlock:^{
+            NSLog(@" - Refreshing - ");
+        }];
+        self.tableView.mj_header = header;
+        header.backgroundColor = UIColor.yellowColor;
+        TestView *testView = [[TestView alloc] init];
+        testView.mj_h = 100.f;
+        header.interactiveView = testView;
+        header.interactiveShowState = YES;
+        header.lastUpdatedTimeLabel.hidden = YES;
+        header.stateLabel.font = [UIFont systemFontOfSize:13];
+        [header setMj_x:20];
+        
+//        MJRefreshXXBehindHeader *header = [MJRefreshXXBehindHeader headerWithRefreshingBlock:^{
+//            NSLog(@" - Refreshing - ");
+//        }];
+//        self.tableView.mj_header = header;
+//        header.insertShowState = YES;
+//        header.backgroundColor = UIColor.yellowColor;
+//        UIView *contentView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 200, 100)];
+//        contentView.backgroundColor = UIColor.blueColor;
+//        header.insertView = contentView;
+//        header.lastUpdatedTimeLabel.hidden = YES;
+//        header.stateLabel.font = [UIFont systemFontOfSize:13];
+//        [header setMj_x:20];
+        
+    }
 }
 
 #pragma mark - UITableView DataSource
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return 6;
+    return 10;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
