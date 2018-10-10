@@ -9,7 +9,6 @@
 #import "TableViewController.h"
 
 #import "IMInteractiveRefreshHeader.h"
-#import "MJRefreshXXBehindHeader.h"
 #import "MJRefreshInteractiveHeader.h"
 #import "TestView.h"
 
@@ -52,30 +51,17 @@ static NSString *const CellIdentifier = @"CellIdentifier";
         [header addContentView:contentView];
     } else {
         MJRefreshInteractiveHeader *header = [MJRefreshInteractiveHeader headerWithRefreshingBlock:^{
-            NSLog(@" - Refreshing - ");
+            NSLog(@" - refreshing - ");
         }];
         self.tableView.mj_header = header;
+//        header.mj_h = 0.f;
         header.backgroundColor = UIColor.yellowColor;
         TestView *testView = [[TestView alloc] init];
         testView.mj_h = 100.f;
         header.interactiveView = testView;
-        header.interactiveShowState = YES;
         header.lastUpdatedTimeLabel.hidden = YES;
         header.stateLabel.font = [UIFont systemFontOfSize:13];
         [header setMj_x:20];
-        
-//        MJRefreshXXBehindHeader *header = [MJRefreshXXBehindHeader headerWithRefreshingBlock:^{
-//            NSLog(@" - Refreshing - ");
-//        }];
-//        self.tableView.mj_header = header;
-//        header.insertShowState = YES;
-//        header.backgroundColor = UIColor.yellowColor;
-//        UIView *contentView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 200, 100)];
-//        contentView.backgroundColor = UIColor.blueColor;
-//        header.insertView = contentView;
-//        header.lastUpdatedTimeLabel.hidden = YES;
-//        header.stateLabel.font = [UIFont systemFontOfSize:13];
-//        [header setMj_x:20];
         
     }
 }
