@@ -9,14 +9,20 @@
 #import "MJRefreshInteractiveHeader.h"
 
 #define InteractiveViewInitOffsetY self.mj_h
-#define InteractiveViewRemainHeight MIN(30.f, self.interactiveView.mj_h * 0.3f)
-#define InteractiveViewShowThreshold MAX(50.f, self.interactiveView.mj_h * 0.2f)
+#define InteractiveViewRemainHeight MAX(20.f, self.interactiveView.mj_h * 0.1f)
+#define InteractiveViewShowThreshold MAX(40.f, self.interactiveView.mj_h * 0.2f)
 
 @interface MJRefreshInteractiveHeader ()
 
-@property (nonatomic, assign) BOOL interactiveVisible;
-
 @property (nonatomic, assign) CGFloat befroeInteractiveOffsetY;
+
+/** InteractiveView显示时上滑隐藏动效中ScrollView的顶部内边距偏移量(在执行隐藏动画时需要使用计算) */
+@property (nonatomic, assign) CGFloat interactiveShowInsetTDelta;
+/** InteractiveView全显示时，ScrollView的顶部内边距 */
+@property (nonatomic, assign) CGFloat interactiveFullVisibleScrollInsetsTop;
+
+/** 标记InteractiveView是否正处于 显示←→隐藏 之间 */
+@property (nonatomic, assign) BOOL interactiveShowHideAnimationing;
 
 @end
 
@@ -38,23 +44,30 @@
     maskLayer.frame = CGRectMake(_interactiveView.mj_x, -1000, self.mj_w, self.mj_h + 1000);
 }
 
+#pragma mark - 设置 InteractiveView
 - (void)setInteractiveView:(UIView *)interactiveView {
     _interactiveView = interactiveView;
     if (!_interactiveView) {
         _interactiveShowState = MJRefreshInteractiveViewShowStateNone;
         return;
     }
+    _interactiveShowState = MJRefreshInteractiveViewShowStateInvisible;
     if (_interactiveView.superview) {
         [_interactiveView removeFromSuperview];
     }
     [self addSubview:_interactiveView];
 }
 
+#pragma mark - 滑动Offset改变
 - (void)scrollViewContentOffsetDidChange:(NSDictionary *)change {
+    // 当InteractiveView处于 显示←→d隐藏动画中时 不做任何动作
+    if (self.interactiveShowHideAnimationing) return;
+    // 不显示InteractiveView, 仅刷新
     if (self.interactiveShowState == MJRefreshInteractiveViewShowStateNone) {
         [super scrollViewContentOffsetDidChange:change];
         return;
     }
+    // 未显示InteractiveView，且未超过显示InteractiveView的临界点
     if (!self.interactiveVisible && self.interactiveShowState < MJRefreshInteractiveViewShowStateAnimationing2) {
         [super scrollViewContentOffsetDidChange:change];
     }
@@ -65,6 +78,7 @@
         || !self.interactiveView) {
         return;
     }
+    
     [self.scrollView sendSubviewToBack:self];
     if (!self.interactiveVisible) {
         CGFloat headerFullVisibleOffsetY = self.scrollView.mj_insetT + self.mj_h;
@@ -96,33 +110,46 @@
         }
         _befroeInteractiveOffsetY = interactiveOffsetY;
     } else {
-        CGFloat headerFullVisibleOffsetY = self.scrollView.mj_insetT;
+        CGFloat headerFullVisibleOffsetY = self.interactiveFullVisibleScrollInsetsTop;
         CGFloat interactiveOffsetY = offsetY - headerFullVisibleOffsetY;
-        if (offsetY >= self.scrollView.mj_insetT) {
+        if (offsetY >= headerFullVisibleOffsetY) {
             self.interactiveShowState = MJRefreshInteractiveViewShowStateFullVisible;
             self.interactiveView.mj_y = self.mj_h - self.interactiveView.mj_h - interactiveOffsetY;
         } else {
-              self.interactiveShowState = MJRefreshInteractiveViewShowStateAnimationing;
-              self.interactiveView.mj_y = self.mj_h - self.interactiveView.mj_h - interactiveOffsetY * 2;
-          }
+            self.scrollView.mj_insetT = offsetY;
+            self.interactiveShowInsetTDelta = headerFullVisibleOffsetY - offsetY;
+            self.interactiveShowState = MJRefreshInteractiveViewShowStateAnimationing;
+            self.interactiveView.mj_y = self.mj_h - self.interactiveView.mj_h - interactiveOffsetY * 2;
+        }
     }
+}
+
+- (void)setRefreshingBlock:(MJRefreshComponentRefreshingBlock)refreshingBlock {
+    [super setRefreshingBlock:refreshingBlock];
+    [self setRefreshControlAlpha:refreshingBlock ? 1.f : 0.f];
 }
 
 - (void)setRefreshControlAlpha:(CGFloat)alpha {
     if (self.arrowView.alpha == alpha) return;
-    if (self.interactiveVisible) {
+    if (self.interactiveVisible || !self.refreshingBlock) {
         alpha = 0.f;
     }
     self.arrowView.alpha = alpha;
     self.stateLabel.alpha = alpha;
 }
 
+#pragma mark - 刷新状态变化
 - (void)setState:(MJRefreshState)state {
     if (self.interactiveShowState < MJRefreshInteractiveViewShowStateAnimationing2) {
-        [super setState:state];
+        if (!self.refreshingBlock) {
+            [super setState:MJRefreshStateIdle];
+        } else {
+            [super setState:state];
+        }
     }
 }
 
+#pragma mark - InteractiveView显示状态变化
 - (void)setInteractiveShowState:(MJRefreshInteractiveViewShowState)interactiveShowState {
     if (_interactiveShowState == interactiveShowState) return;
     MJRefreshInteractiveViewShowState oldState = _interactiveShowState;
@@ -132,11 +159,13 @@
             _interactiveView.hidden = YES;
         } break;
         case MJRefreshInteractiveViewShowStateAnimationing1: {
+            _interactiveView.hidden = NO;
             [UIView animateWithDuration:MJRefreshFastAnimationDuration animations:^{
                 self.interactiveView.mj_y = self.mj_h - InteractiveViewRemainHeight;
             }];
         } break;
         case MJRefreshInteractiveViewShowStateAnimationing2: {
+            _interactiveView.hidden = NO;
             if (@available(iOS 10.0, *)) {
                 if (oldState < MJRefreshInteractiveViewShowStateAnimationing2) {
                     [[[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleMedium] impactOccurred];
@@ -144,10 +173,12 @@
             }
         } break;
         default:
+            _interactiveView.hidden = NO;
             break;
     }
 }
 
+#pragma mark - 滑动手势状态变化
 - (void)scrollViewPanStateDidChange:(NSDictionary *)change {
     [super scrollViewPanStateDidChange:change];
     if (self.state == MJRefreshStateRefreshing
@@ -168,6 +199,7 @@
             } else {
                 [UIView animateWithDuration:MJRefreshFastAnimationDuration animations:^{
                     self.interactiveView.mj_y = self.mj_h;
+                    [self setRefreshControlAlpha:1.f];
                 }];
             }
         }
@@ -178,21 +210,30 @@
     self.interactiveVisible = YES;
     self.state = MJRefreshStateIdle;
     self.interactiveShowState = MJRefreshInteractiveViewShowStateFullVisible;
+    self.interactiveFullVisibleScrollInsetsTop = self.scrollView.mj_insetT + self.interactiveView.mj_h;
+    self.interactiveShowHideAnimationing = YES;
     [UIView animateWithDuration:MJRefreshFastAnimationDuration animations:^{
         self.scrollView.mj_insetT += self.interactiveView.mj_h;
         self.interactiveView.mj_y = self.mj_h - self.interactiveView.mj_h;
         CGPoint offset = self.scrollView.contentOffset;
         offset.y = -self.scrollView.mj_insetT;
         [self.scrollView setContentOffset:offset animated:NO];
+    } completion:^(BOOL finished) {
+        self.interactiveShowHideAnimationing = NO;
     }];
 }
 
 - (void)hideInteractiveView {
     self.interactiveVisible = NO;
     self.interactiveShowState = MJRefreshInteractiveViewShowStateInvisible;
+    self.interactiveShowHideAnimationing = YES;
     [UIView animateWithDuration:MJRefreshFastAnimationDuration animations:^{
-        self.scrollView.mj_insetT -= self.interactiveView.mj_h;
+        self.scrollView.mj_insetT -= self.interactiveView.mj_h - self.interactiveShowInsetTDelta;
         self.interactiveView.mj_y = self.mj_h;
+    } completion:^(BOOL finished) {
+        self.state = MJRefreshStateIdle;
+        self.interactiveShowHideAnimationing = NO;
+        self.interactiveShowInsetTDelta = 0;
     }];
 }
 

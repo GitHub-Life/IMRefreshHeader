@@ -29,4 +29,8 @@ typedef NS_ENUM(NSInteger, MJRefreshInteractiveViewShowState) {
 
 @property (nonatomic, assign) MJRefreshInteractiveViewShowState interactiveShowState;
 
+@property (nonatomic, assign) BOOL interactiveVisible;
+
+- (void)hideInteractiveView;
+
 @end
